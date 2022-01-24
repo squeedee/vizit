@@ -25,6 +25,7 @@ type Resource struct {
 
 type Blueprint struct {
 	Options map[string]Option
+	Resources map[string]Resource
 }
 
 func (bp *Blueprint) Entrypoints() map[string]Option {
@@ -89,12 +90,14 @@ func getInputs(resource blueprint.Resource, option *blueprint.Option) []string {
 }
 
 func ParseBlueprint(in blueprint.Blueprint) Blueprint {
+	resources := map[string]Resource{}
 	options := map[string]Option{}
 
 	for _, inResource := range in.Spec.Resources {
+		resource := Resource{ Name: inResource.Name}
 		if len(inResource.Options) > 0 {
 			for _, inOption := range inResource.Options {
-				options[inResource.Name+":"+inOption.Name] = Option{
+				opt := Option{
 					ResourceName: inResource.Name,
 					TemplateRef: getRef(inResource, &inOption),
 					Criteria: Criteria{
@@ -102,10 +105,13 @@ func ParseBlueprint(in blueprint.Blueprint) Blueprint {
 						Inputs:   getInputs(inResource, &inOption),
 					},
 				}
+				options[inResource.Name+":"+inOption.Name] = opt
+				resource.Options = append(resource.Options, opt)
 			}
+
 		} else {
 			ref := getRef(inResource, nil)
-			options[inResource.Name+":"+ref.Name] = Option{
+			opt := Option{
 				ResourceName: inResource.Name,
 				TemplateRef: ref,
 				Criteria: Criteria{
@@ -113,11 +119,14 @@ func ParseBlueprint(in blueprint.Blueprint) Blueprint {
 					Inputs:   getInputs(inResource, nil),
 				},
 			}
-
+			options[inResource.Name+":"+ref.Name] = opt
+			resource.Options = append(resource.Options, opt)
 		}
+		resources[resource.Name] =  resource
 	}
 
 	return Blueprint{
 		Options: options,
+		Resources: resources,
 	}
 }
