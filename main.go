@@ -41,5 +41,6 @@ func main() {
 	//
 	//fmt.Printf("=====================================================")
 	parsed := il.ParseBlueprint(*bp)
-	_, _ = pretty.Println(parsed)
+	//_, _ = pretty.Println(parsed)
+	_, _ = pretty.Println(parsed.Entrypoints())
 }

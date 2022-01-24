@@ -12,6 +12,7 @@ type Criteria struct {
 	Inputs   []string
 }
 type Option struct {
+	ResourceName string
 	TemplateRef blueprint.ClusterResourceRef
 
 	Criteria
@@ -23,11 +24,20 @@ type Resource struct {
 }
 
 type Blueprint struct {
-	Resources map[string]Resource
+	Options map[string]Option
 }
 
+func (bp *Blueprint) Entrypoints() map[string]Option {
+	ep := map[string]Option{}
 
+	for name, option := range bp.Options {
+		if len(option.Criteria.Inputs) < 1 {
+			ep[name] = option
+		}
+	}
 
+	return ep
+}
 
 func getRef(resource blueprint.Resource, option *blueprint.Option) blueprint.ClusterResourceRef {
 	if resource.TemplateRef != nil {
@@ -79,38 +89,35 @@ func getInputs(resource blueprint.Resource, option *blueprint.Option) []string {
 }
 
 func ParseBlueprint(in blueprint.Blueprint) Blueprint {
-	resources := map[string]Resource{}
+	options := map[string]Option{}
 
 	for _, inResource := range in.Spec.Resources {
-		var opts []Option
-
 		if len(inResource.Options) > 0 {
 			for _, inOption := range inResource.Options {
-				opts = append(opts, Option{
+				options[inResource.Name+":"+inOption.Name] = Option{
+					ResourceName: inResource.Name,
 					TemplateRef: getRef(inResource, &inOption),
 					Criteria: Criteria{
 						Selector: getSelector(inResource, &inOption),
 						Inputs:   getInputs(inResource, &inOption),
 					},
-				})
+				}
 			}
 		} else {
-			opts = append(opts, Option{
-				TemplateRef: getRef(inResource, nil),
+			ref := getRef(inResource, nil)
+			options[inResource.Name+":"+ref.Name] = Option{
+				ResourceName: inResource.Name,
+				TemplateRef: ref,
 				Criteria: Criteria{
 					Selector: getSelector(inResource, nil),
 					Inputs:   getInputs(inResource, nil),
 				},
-			})
-		}
+			}
 
-		resources[inResource.Name] = Resource{
-			Name:    inResource.Name,
-			Options: opts,
 		}
 	}
 
 	return Blueprint{
-		Resources: resources,
+		Options: options,
 	}
 }
