@@ -1,0 +1,103 @@
+---
+apiVersion: carto.run/v1alpha1
+kind: ClusterSupplyChain
+metadata:
+  name: supply-chain
+spec:
+  selector:
+    matchLabels:
+      workload-type: web
+      has-tests: "true"
+    matchExpressions:
+      - { key: language, operator: In, values: [ java, ruby, go ] }
+
+  resources:
+    - name: source-provider
+      kind: ClusterSourceTemplate
+      options:
+        - name: source-from-git-repo
+          selector:
+            matchLabels:
+              source-kind: source-repository
+        - name: source-from-image-registry
+          selector:
+            matchLabels:
+              source-kind: source-registry
+
+    - name: source-tester
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: test-source-with-tekton
+      selector:
+        matchLabels:
+          has-tests: "true"
+      sources:
+        - resource: source-provider
+          name: source
+
+    - name: image-provider
+      templateRef:
+        kind: ClusterImageTemplate
+        name: image-from-image-registry
+      selector:
+        matchLabels:
+          source-kind: image-registry
+
+
+    # Not really a thing, but trying to show a 2^2 permutation in the supply chain
+    - name: image-tester
+      templateRef:
+        kind: ClusterImageTemplate
+        name: test-image-with-tekton
+      selector:
+        matchLabels:
+          has-tests: "true"
+      sources:
+        - resource: image-provider
+          name: image
+
+    - name: image-builder
+      kind: ClusterImageTemplate
+      options:
+        - name: build-image
+          images:
+            - resource: source-tester
+              name: source
+        - name: build-image
+          images:
+            - resource: source-provider
+              name: source
+
+    - name: configure
+      kind: ClusterConfigTemplate
+      options:
+        - name: configure
+          source:
+            - resource: image-builder
+              name: image
+        - name: configure
+          sources:
+            - resource: image-tester
+              name: image
+        - name: configure
+          sources:
+            - resource: image-provider
+              name: image
+
+    - name: gitops
+      kind: ClusterSourceTemplate
+      options:
+        - name: git-pusher
+          selector:
+            matchLabels:
+              target: gitops
+          configs:
+            - resource: configure
+              name: config
+        - name: registry-pusher
+          selector:
+            matchLabels:
+              target: repostiory
+          configs:
+            - resource: configure
+              name: config
