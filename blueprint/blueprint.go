@@ -15,7 +15,7 @@ type InputRef struct {
 }
 
 type Criteria struct {
-	Selector    metav1.LabelSelector `json:"selector"`
+	Selector    *metav1.LabelSelector `json:"selector"`
 	Sources     []InputRef           `json:"sources"`
 	Images      []InputRef           `json:"images"`
 	Configs     []InputRef           `json:"configs"`
@@ -34,21 +34,6 @@ type Resource struct {
 	Options     []Option             `json:"options"`
 	Criteria
 }
-
-//func (r *Resource) GetRef() *ClusterResourceRef {
-//	if r.TemplateRef != nil {
-//		return &ClusterResourceRef{
-//			Kind: r.TemplateRef.Kind,
-//			Name: r.TemplateRef.Name,
-//		}
-//	}
-//
-//	return &ClusterResourceRef{
-//		Kind: r.Kind,
-//		Name: r.Name,
-//	}
-//
-//}
 
 type Spec struct {
 	Selector  *metav1.LabelSelector `json:"selector"`

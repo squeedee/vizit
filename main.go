@@ -6,6 +6,7 @@ import (
 	"log"
 
 	blueprint "github.com/bunniesandbeatings/vizit/blueprint"
+	"github.com/bunniesandbeatings/vizit/il"
 	"github.com/kr/pretty"
 	"go.uber.org/zap"
 
@@ -36,6 +37,9 @@ func main() {
 		log.Fatalf("Could not unmarshal '%s': %v", source, err)
 	}
 
-	_, _ = pretty.Println(bp)
-
+	//_, _ = pretty.Println(bp)
+	//
+	//fmt.Printf("=====================================================")
+	parsed := il.ParseBlueprint(*bp)
+	_, _ = pretty.Println(parsed)
 }
