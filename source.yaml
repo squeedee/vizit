@@ -72,7 +72,7 @@ spec:
       kind: ClusterConfigTemplate
       options:
         - name: configure
-          source:
+          sources:
             - resource: image-builder
               name: image
         - name: configure

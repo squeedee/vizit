@@ -9,7 +9,6 @@ import (
 
 	blueprint "github.com/bunniesandbeatings/vizit/blueprint"
 	"github.com/bunniesandbeatings/vizit/il"
-	"github.com/kr/pretty"
 	"go.uber.org/zap"
 
 	"sigs.k8s.io/yaml"
@@ -28,12 +27,12 @@ func mermaid(parsed il.Blueprint) string {
 	lines = append(lines, "flowchart RL")
 
 	for name, resource := range parsed.Resources {
-		lines = append(lines, fmt.Sprintf("  subgraph res_%s", name))
+		lines = append(lines, fmt.Sprintf("  subgraph res_%s[%s]", name, name))
 		lines = append(lines, fmt.Sprintf("  direction RL"))
 		for i, opt := range resource.Options {
-			lines = append(lines, fmt.Sprintf("    opt_%d_%s", i,opt.TemplateRef.Name))
+			lines = append(lines, fmt.Sprintf("    opt_%d_%s[%s]", i, opt.TemplateRef.Name, opt.TemplateRef.Name))
 			for _, input := range opt.Inputs {
-				edges = append(edges, fmt.Sprintf("  opt_%d_%s --> res_%s", i,opt.TemplateRef.Name, input))
+				edges = append(edges, fmt.Sprintf("  opt_%d_%s --> res_%s", i, opt.TemplateRef.Name, input))
 			}
 		}
 		lines = append(lines, fmt.Sprintf("  end"))
@@ -65,8 +64,9 @@ func main() {
 	//fmt.Printf("=====================================================")
 	parsed := il.ParseBlueprint(*bp)
 	//_, _ = pretty.Println(parsed)
-	_, _ = pretty.Println(parsed.Entrypoints())
+	//_, _ = pretty.Println(parsed.Entrypoints())
 
+	fmt.Println("##### Paste into https://mermaid.live/")
 	fmt.Println(mermaid(parsed))
 
 }
