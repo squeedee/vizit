@@ -7,6 +7,8 @@ import (
 type ClusterResourceRef struct {
 	Name string `json:"name"`
 	Kind string `json:"kind"`
+	Options     []Option             `json:"options"`
+
 }
 
 type InputRef struct {
@@ -30,8 +32,6 @@ type Option struct {
 type Resource struct {
 	Name        string               `json:"name"`
 	TemplateRef *ClusterResourceRef  `json:"templateRef"`
-	Kind        string               `json:"kind"`
-	Options     []Option             `json:"options"`
 	Criteria
 }
 

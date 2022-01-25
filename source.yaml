@@ -13,16 +13,17 @@ spec:
 
   resources:
     - name: source-provider
-      kind: ClusterSourceTemplate
-      options:
-        - name: source-from-git-repo
-          selector:
-            matchLabels:
-              source-kind: source-repository
-        - name: source-from-image-registry
-          selector:
-            matchLabels:
-              source-kind: source-registry
+      templateRef:
+        kind: ClusterSourceTemplate
+        options:
+          - name: source-from-git-repo
+            selector:
+              matchLabels:
+                source-kind: source-repository
+          - name: source-from-image-registry
+            selector:
+              matchLabels:
+                source-kind: source-registry
 
     - name: source-tester
       templateRef:
@@ -57,49 +58,52 @@ spec:
           name: image
 
     - name: image-builder
-      kind: ClusterImageTemplate
-      options:
-        - name: build-image
-          images:
-            - resource: source-tester
-              name: source
-        - name: build-image
-          images:
-            - resource: source-provider
-              name: source
+      templateRef:
+        kind: ClusterImageTemplate
+        options:
+          - name: build-image
+            images:
+              - resource: source-tester
+                name: source
+          - name: build-image
+            images:
+              - resource: source-provider
+                name: source
 
     - name: configure
-      kind: ClusterConfigTemplate
-      options:
-        - name: configure
-          sources:
-            - resource: image-builder
-              name: image
-        - name: configure
-          sources:
-            - resource: image-tester
-              name: image
-        - name: configure
-          sources:
-            - resource: image-provider
-              name: image
+      templateRef:
+        kind: ClusterConfigTemplate
+        options:
+          - name: configure
+            sources:
+              - resource: image-builder
+                name: image
+          - name: configure
+            sources:
+              - resource: image-tester
+                name: image
+          - name: configure
+            sources:
+              - resource: image-provider
+                name: image
 
     - name: gitops
-      kind: ClusterSourceTemplate
-      options:
-        - name: git-pusher
-          selector:
-            matchLabels:
-              target: gitops
-            matchExpressions: # not a serious selector, just proof of concept
-              - { key: language, operator: In, values: [ java, ruby, go ] }
-          configs:
-            - resource: configure
-              name: config
-        - name: registry-pusher
-          selector:
-            matchLabels:
-              target: repostiory
-          configs:
-            - resource: configure
-              name: config
+      templateRef:
+        kind: ClusterSourceTemplate
+        options:
+          - name: git-pusher
+            selector:
+              matchLabels:
+                target: gitops
+              matchExpressions: # not a serious selector, just proof of concept
+                - { key: language, operator: In, values: [ java, ruby, go ] }
+            configs:
+              - resource: configure
+                name: config
+          - name: registry-pusher
+            selector:
+              matchLabels:
+                target: repostiory
+            configs:
+              - resource: configure
+                name: config

@@ -40,18 +40,19 @@ func (bp *Blueprint) Entrypoints() map[string]Option {
 	return ep
 }
 
-func getRef(resource blueprint.Resource, option *blueprint.Option) blueprint.ClusterResourceRef {
-	if resource.TemplateRef != nil {
+func getRef(templateRef *blueprint.ClusterResourceRef, option *blueprint.Option) blueprint.ClusterResourceRef {
+	if option != nil {
 		return blueprint.ClusterResourceRef{
-			Kind: resource.TemplateRef.Kind,
-			Name: resource.TemplateRef.Name,
+			Kind: templateRef.Kind,
+			Name: option.Name,
 		}
 	}
 
 	return blueprint.ClusterResourceRef{
-		Kind: resource.Kind,
-		Name: option.Name,
+		Kind: templateRef.Kind,
+		Name: templateRef.Name,
 	}
+
 }
 
 func getSelector(resource blueprint.Resource, option *blueprint.Option) *metav1.LabelSelector {
@@ -99,11 +100,11 @@ func ParseBlueprint(in blueprint.Blueprint) Blueprint {
 
 	for _, inResource := range in.Spec.Resources {
 		resource := Resource{ Name: inResource.Name}
-		if len(inResource.Options) > 0 {
-			for _, inOption := range inResource.Options {
+		if len(inResource.TemplateRef.Options) > 0 {
+			for _, inOption := range inResource.TemplateRef.Options {
 				opt := Option{
 					ResourceName: inResource.Name,
-					TemplateRef: getRef(inResource, &inOption),
+					TemplateRef: getRef(inResource.TemplateRef, &inOption),
 					Criteria: Criteria{
 						Selector: getSelector(inResource, &inOption),
 						Inputs:   getInputs(inResource, &inOption),
@@ -114,7 +115,7 @@ func ParseBlueprint(in blueprint.Blueprint) Blueprint {
 			}
 
 		} else {
-			ref := getRef(inResource, nil)
+			ref := getRef(inResource.TemplateRef, nil)
 			opt := Option{
 				ResourceName: inResource.Name,
 				TemplateRef: ref,
