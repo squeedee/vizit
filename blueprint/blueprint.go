@@ -23,7 +23,7 @@ type Criteria struct {
 
 type Option struct {
 	Name string `json:"name"`
-	Selector metav1.LabelSelector `json:"selector"`
+	Selector *metav1.LabelSelector `json:"selector"`
 	Criteria
 }
 

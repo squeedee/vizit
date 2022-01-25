@@ -59,7 +59,11 @@ func getSelector(resource blueprint.Resource, option *blueprint.Option) *metav1.
 		return resource.Selector.DeepCopy()
 	}
 
-	return option.Selector.DeepCopy()
+	if option != nil && option.Selector != nil {
+		return option.Selector.DeepCopy()
+	}
+
+	return nil
 }
 
 func getInputs(resource blueprint.Resource, option *blueprint.Option) []string {

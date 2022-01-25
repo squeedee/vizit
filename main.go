@@ -25,22 +25,29 @@ func init() {
 }
 
 func selectorString(selector *v1.LabelSelector) string {
+	if selector == nil {
+		return ""
+	}
 	var selectors []string
-	for name, value := range selector.MatchLabels {
-		selectors = append(selectors, fmt.Sprintf(
-			"#8226; %s=%s",
-			name,
-			value))
+	if selector.MatchLabels != nil {
+		for name, value := range selector.MatchLabels {
+			selectors = append(selectors, fmt.Sprintf(
+				"#8226; %s=%s",
+				name,
+				value))
+		}
 	}
-	for _, expr := range selector.MatchExpressions {
-		selectors = append(selectors, fmt.Sprintf(
-			"#8226; %s %s %s",
-			expr.Key,
-			expr.Operator,
-			strings.Join(expr.Values,","),
+	if selector.MatchExpressions != nil {
+		for _, expr := range selector.MatchExpressions {
+			selectors = append(selectors, fmt.Sprintf(
+				"#8226; %s %s %s",
+				expr.Key,
+				expr.Operator,
+				strings.Join(expr.Values, ","),
 			))
+		}
 	}
-	return strings.Join(selectors,"\\\n")
+	return strings.Join(selectors, "\\\n")
 }
 
 func mermaid(parsed il.Blueprint) string {
