@@ -48,29 +48,38 @@ func mermaid(parsed il.Blueprint) string {
 	var edges []string
 
 	lines = append(lines, "flowchart RL")
+	lines = append(lines, "  classDef sourceNode stroke:#66f,stroke-width:2px;")
 
 	for name, resource := range parsed.Resources {
+		resourceNodeName := fmt.Sprintf(
+			"res_%s",
+			name)
 		lines = append(lines, fmt.Sprintf(
-			"  subgraph res_%s[%s]",
-			name,
+			"  subgraph %s[%s]",
+			resourceNodeName,
 			name))
 		lines = append(lines, fmt.Sprintf(
-			"  direction RL"))
+			"    direction RL"))
 		for i, opt := range resource.Options {
+			optNodeName := fmt.Sprintf("opt_%d_%s", i, opt.TemplateRef.Name)
 			lines = append(lines, fmt.Sprintf(
-				"    opt_%d_%s[\\\"%s\\\\n%s\\\"]",
-				i,
-				opt.TemplateRef.Name,
+				"    %s[\\\"%s\\\\n%s\\\"]",
+				optNodeName,
 				opt.TemplateRef.Name,
 				selectorString(opt.Selector),
 			))
 			for _, input := range opt.Inputs {
 				edges = append(edges, fmt.Sprintf(
-					"  opt_%d_%s --> res_%s",
-					i,
-					opt.TemplateRef.Name,
+					"  %s --> res_%s",
+					optNodeName,
 					input))
 			}
+			if len(opt.Inputs) < 1 {
+				lines = append(lines, fmt.Sprintf(
+					"  class %s sourceNode;",
+					optNodeName))
+			}
+
 		}
 		lines = append(lines, fmt.Sprintf(
 			"  end"))
@@ -105,7 +114,7 @@ func main() {
 	//_, _ = pretty.Println(parsed.Entrypoints())
 
 	mermaidString := mermaid(parsed)
-	siteString := fmt.Sprintf("{\"code\":\"%s\",\"mermaid\":\"{\\n  \\\"theme\\\": \\\"dark\\\"\\n}\",\"updateEditor\":false,\"autoSync\":true,\"updateDiagram\":false}", strings.Replace(mermaidString, "\n", "\\n", -1))
+	siteString := fmt.Sprintf("{\"code\":\"%s\",\"mermaid\":\"{\\n  \\\"theme\\\": \\\"dark\\\"\\n}\",\"updateEditor\":false,\"autoSync\":false,\"updateDiagram\":false}", strings.Replace(mermaidString, "\n", "\\n", -1))
 
 	var b bytes.Buffer
 
