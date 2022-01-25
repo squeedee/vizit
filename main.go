@@ -1,16 +1,19 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
 
+	"compress/zlib"
+
 	blueprint "github.com/bunniesandbeatings/vizit/blueprint"
 	"github.com/bunniesandbeatings/vizit/il"
 	"go.uber.org/zap"
-
 	"sigs.k8s.io/yaml"
 )
 
@@ -66,7 +69,15 @@ func main() {
 	//_, _ = pretty.Println(parsed)
 	//_, _ = pretty.Println(parsed.Entrypoints())
 
-	fmt.Println("##### Paste into https://mermaid.live/")
-	fmt.Println(mermaid(parsed))
+	mermaidString := mermaid(parsed)
+	siteString := fmt.Sprintf("{\"code\":\"%s\",\"mermaid\":\"{\\n  \\\"theme\\\": \\\"dark\\\"\\n}\",\"updateEditor\":false,\"autoSync\":true,\"updateDiagram\":false}", strings.Replace(mermaidString, "\n", "\\n",-1))
 
+	var b bytes.Buffer
+
+	w, _ := zlib.NewWriterLevel(&b, zlib.BestCompression)
+	w.Write([]byte(siteString))
+	w.Close()
+
+	sEnc := base64.URLEncoding.EncodeToString(b.Bytes())
+	fmt.Println("https://mermaid.live/edit/#pako:" + sEnc)
 }

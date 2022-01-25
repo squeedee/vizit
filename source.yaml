@@ -84,7 +84,7 @@ spec:
             - resource: image-provider
               name: image
 
-    - name: gitops
+    - name: gitopsinator
       kind: ClusterSourceTemplate
       options:
         - name: git-pusher
