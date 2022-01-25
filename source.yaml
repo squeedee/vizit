@@ -91,6 +91,8 @@ spec:
           selector:
             matchLabels:
               target: gitops
+            matchExpressions: # not a serious selector, just proof of concept
+              - { key: language, operator: In, values: [ java, ruby, go ] }
           configs:
             - resource: configure
               name: config

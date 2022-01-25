@@ -11,9 +11,10 @@ import (
 
 	"compress/zlib"
 
-	blueprint "github.com/bunniesandbeatings/vizit/blueprint"
+	"github.com/bunniesandbeatings/vizit/blueprint"
 	"github.com/bunniesandbeatings/vizit/il"
 	"go.uber.org/zap"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,22 +24,56 @@ func init() {
 	flag.StringVar(&source, "file", "source.yaml", "source to analyze")
 }
 
+func selectorString(selector *v1.LabelSelector) string {
+	var selectors []string
+	for name, value := range selector.MatchLabels {
+		selectors = append(selectors, fmt.Sprintf(
+			"#8226; %s=%s",
+			name,
+			value))
+	}
+	for _, expr := range selector.MatchExpressions {
+		selectors = append(selectors, fmt.Sprintf(
+			"#8226; %s %s %s",
+			expr.Key,
+			expr.Operator,
+			strings.Join(expr.Values,","),
+			))
+	}
+	return strings.Join(selectors,"\\\n")
+}
+
 func mermaid(parsed il.Blueprint) string {
-	lines := []string{}
-	edges := []string{}
+	var lines []string
+	var edges []string
 
 	lines = append(lines, "flowchart RL")
 
 	for name, resource := range parsed.Resources {
-		lines = append(lines, fmt.Sprintf("  subgraph res_%s[%s]", name, name))
-		lines = append(lines, fmt.Sprintf("  direction RL"))
+		lines = append(lines, fmt.Sprintf(
+			"  subgraph res_%s[%s]",
+			name,
+			name))
+		lines = append(lines, fmt.Sprintf(
+			"  direction RL"))
 		for i, opt := range resource.Options {
-			lines = append(lines, fmt.Sprintf("    opt_%d_%s[%s]", i, opt.TemplateRef.Name, opt.TemplateRef.Name))
+			lines = append(lines, fmt.Sprintf(
+				"    opt_%d_%s[\\\"%s\\\\n%s\\\"]",
+				i,
+				opt.TemplateRef.Name,
+				opt.TemplateRef.Name,
+				selectorString(opt.Selector),
+			))
 			for _, input := range opt.Inputs {
-				edges = append(edges, fmt.Sprintf("  opt_%d_%s --> res_%s", i, opt.TemplateRef.Name, input))
+				edges = append(edges, fmt.Sprintf(
+					"  opt_%d_%s --> res_%s",
+					i,
+					opt.TemplateRef.Name,
+					input))
 			}
 		}
-		lines = append(lines, fmt.Sprintf("  end"))
+		lines = append(lines, fmt.Sprintf(
+			"  end"))
 	}
 
 	s1 := strings.Join(lines, "\n")
@@ -70,7 +105,7 @@ func main() {
 	//_, _ = pretty.Println(parsed.Entrypoints())
 
 	mermaidString := mermaid(parsed)
-	siteString := fmt.Sprintf("{\"code\":\"%s\",\"mermaid\":\"{\\n  \\\"theme\\\": \\\"dark\\\"\\n}\",\"updateEditor\":false,\"autoSync\":true,\"updateDiagram\":false}", strings.Replace(mermaidString, "\n", "\\n",-1))
+	siteString := fmt.Sprintf("{\"code\":\"%s\",\"mermaid\":\"{\\n  \\\"theme\\\": \\\"dark\\\"\\n}\",\"updateEditor\":false,\"autoSync\":true,\"updateDiagram\":false}", strings.Replace(mermaidString, "\n", "\\n", -1))
 
 	var b bytes.Buffer
 
