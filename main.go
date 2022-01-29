@@ -130,5 +130,5 @@ func main() {
 	w.Close()
 
 	sEnc := base64.URLEncoding.EncodeToString(b.Bytes())
-	fmt.Println("https://mermaid.live/edit/#pako:" + sEnc)
+	fmt.Println("https://mermaid.live/view/#pako:" + sEnc)
 }

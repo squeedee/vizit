@@ -8,8 +8,6 @@ spec:
     matchLabels:
       workload-type: web
       has-tests: "true"
-    matchExpressions:
-      - { key: language, operator: In, values: [ java, ruby, go ] }
 
   resources:
     - name: source-provider
@@ -18,12 +16,12 @@ spec:
         options:
           - name: source-from-git-repo
             selector:
-              matchLabels:
-                source-kind: source-repository
+              matchFields:
+                { key: "spec.source.url", operation: exists }
           - name: source-from-image-registry
             selector:
-              matchLabels:
-                source-kind: source-registry
+              matchFields:
+                { key: "spec.source.image", operation: exists }
 
     - name: source-tester
       templateRef:
@@ -41,21 +39,8 @@ spec:
         kind: ClusterImageTemplate
         name: image-from-image-registry
       selector:
-        matchLabels:
-          source-kind: image-registry
-
-
-    # Not really a thing, but trying to show a 2^2 permutation in the supply chain
-    - name: image-tester
-      templateRef:
-        kind: ClusterImageTemplate
-        name: test-image-with-tekton
-      selector:
-        matchLabels:
-          has-tests: "true"
-      sources:
-        - resource: image-provider
-          name: image
+        matchFields:
+          { key: "spec.image", operation: exists }
 
     - name: image-builder
       templateRef:
@@ -80,10 +65,6 @@ spec:
                 name: image
           - name: configure
             sources:
-              - resource: image-tester
-                name: image
-          - name: configure
-            sources:
               - resource: image-provider
                 name: image
 
@@ -95,8 +76,6 @@ spec:
             selector:
               matchLabels:
                 target: gitops
-              matchExpressions: # not a serious selector, just proof of concept
-                - { key: language, operator: In, values: [ java, ruby, go ] }
             configs:
               - resource: configure
                 name: config
